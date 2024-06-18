@@ -10,6 +10,8 @@ project(
     LANGUAGES CXX
 )
 
+set(CMAKE_CXX_COMPILER "clang++")
+
 include(cmake/project-is-top-level.cmake)
 include(cmake/variables.cmake)
 
@@ -28,6 +30,7 @@ target_include_directories(
 
 target_compile_features(Connect4_lib PUBLIC cxx_std_17)
 
+
 # ---- Declare executable ----
 
 add_executable(Connect4_exe source/main.cpp)
@@ -38,6 +41,9 @@ set_property(TARGET Connect4_exe PROPERTY OUTPUT_NAME Connect4)
 target_compile_features(Connect4_exe PRIVATE cxx_std_17)
 
 target_link_libraries(Connect4_exe PRIVATE Connect4_lib)
+
+target_compile_options(Connect4_lib PRIVATE "-mbmi2")
+target_compile_options(Connect4_exe PRIVATE "-mbmi2")
 
 # ---- Install rules ----
 
