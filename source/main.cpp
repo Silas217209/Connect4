@@ -15,6 +15,9 @@ const uint64_t column_masks[7] = {
     0b0000000000000000000000'0000001'0000001'0000001'0000001'0000001'0000001,
 };
 
+const unsigned int row_count = 6;
+const unsigned int col_count = 7;
+
 enum Turn { yellow, red };
 
 class Game {
@@ -32,20 +35,34 @@ class Game {
 
 class Board {
   public:
-    uint64_t yellow_bitbaord = 1;
-    uint64_t red_bitbaord = 0b10;
+    uint64_t yellow_bitbaord = 0b0;
+    uint64_t red_bitbaord = 0b0;
 
-    void print_board() {
-        for (int row = 5; row >= 0; row--) {
-            for (int col = 6; col >= 0; col--) {
-                uint64_t index = static_cast<uint64_t>(row) * 7 + col;
+    void show_board() const {
+        for (int row = (row_count - 1); row >= 0; row--) {
+            for (int col = col_count; col >= 0; col--) {
+                uint64_t index = static_cast<uint64_t>(row) * col_count + col;
                 uint64_t field_mask = static_cast<uint64_t>(1) << index;
 
-                //std::cout << std::bitset<42>(field_mask) << "\n";
-                //continue;
-                if ((yellow_bitbaord & field_mask) == 1) {
+                if ((yellow_bitbaord & field_mask) != 0) {
                     std::cout << "◯ ";
-                } else if ((red_bitbaord & field_mask) == 1) {
+                } else if ((red_bitbaord & field_mask) != 0) {
+                    std::cout << "● ";
+                } else {
+                    std::cout << ". ";
+                }
+            }
+            std::cout << "\n";
+        }
+    }
+
+    static void show_any_board(uint64_t board) {
+        for (int row = (row_count - 1); row >= 0; row--) {
+            for (int col = col_count; col >= 0; col--) {
+                uint64_t index = static_cast<uint64_t>(row) * col_count + col;
+                uint64_t field_mask = static_cast<uint64_t>(1) << index;
+
+                if ((board & field_mask) != 0) {
                     std::cout << "● ";
                 } else {
                     std::cout << ". ";
@@ -56,12 +73,11 @@ class Board {
     }
 };
 
-#include "lib.hpp"
-
 auto main() -> int {
-    Board board = Board();
-
-    board.print_board();
+    for (uint64_t board : column_masks) {
+        Board::show_any_board(board);
+    }
 
     return 0;
 }
+
