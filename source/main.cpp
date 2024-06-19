@@ -1,15 +1,6 @@
-#include <immintrin.h>
-#include <sys/types.h>
-
-
 #include "board.hpp"
-#include "constants.hpp"
 
-class Game {
-  public:
-    Turn turn = Turn::yellow;
-};
-
+// ˯ msb
 // 0 0 0 0 0 0 0
 // 0 0 0 0 0 0 0
 // 0 0 0 0 0 0 0
@@ -19,7 +10,7 @@ class Game {
 //             ^ lsb
 
 auto main() -> int {
-    Board board;
+    board board;
     board.show_board();
     return 0;
 }

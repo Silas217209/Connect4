@@ -2,9 +2,10 @@
 
 #include <immintrin.h>
 
+#include <array>
 #include <iostream>
 
-const std::array<bitboard, 7> Board::column_masks = {
+const std::array<bitboard, 7> board::column_masks = {
     0b0000000000000000000000'1000000'1000000'1000000'1000000'1000000'1000000,
     0b0000000000000000000000'0100000'0100000'0100000'0100000'0100000'0100000,
     0b0000000000000000000000'0010000'0010000'0010000'0010000'0010000'0010000,
@@ -13,7 +14,7 @@ const std::array<bitboard, 7> Board::column_masks = {
     0b0000000000000000000000'0000010'0000010'0000010'0000010'0000010'0000010,
     0b0000000000000000000000'0000001'0000001'0000001'0000001'0000001'0000001,
 };
-const std::array<bitboard, 6> Board::row_masks = {
+const std::array<bitboard, 6> board::row_masks = {
     0b0000000000000000000000'0000000'0000000'0000000'0000000'0000000'1111111,
     0b0000000000000000000000'0000000'0000000'0000000'0000000'1111111'0000000,
     0b0000000000000000000000'0000000'0000000'0000000'1111111'0000000'0000000,
@@ -22,7 +23,7 @@ const std::array<bitboard, 6> Board::row_masks = {
     0b0000000000000000000000'1111111'0000000'0000000'0000000'0000000'0000000,
 };
 
-const std::array<bitboard, 6> Board::diagonal_mask = {
+const std::array<bitboard, 6> board::diagonal_mask = {
     0b0000000000000000000000'0000000'0000000'0000001'0000010'0000100'0001000,
     0b0000000000000000000000'0000000'0000001'0000010'0000100'0001000'0010000,
     0b0000000000000000000000'0000001'0000010'0000100'0001000'0010000'0100000,
@@ -31,7 +32,7 @@ const std::array<bitboard, 6> Board::diagonal_mask = {
     0b0000000000000000000000'0001000'0010000'0100000'1000000'0000000'0000000,
 };
 
-const std::array<bitboard, 6> Board::other_diagonal_mask = {
+const std::array<bitboard, 6> board::other_diagonal_mask = {
     0b0000000000000000000000'0000000'0000000'1000000'0100000'0010000'0001000,
     0b0000000000000000000000'0000000'1000000'0100000'0010000'0001000'0000100,
     0b0000000000000000000000'1000000'0100000'0010000'0001000'0000100'0000010,
@@ -40,7 +41,7 @@ const std::array<bitboard, 6> Board::other_diagonal_mask = {
     0b0000010000000000000000'0001000'0000100'0000010'0000001'0000000'0000000,
 };
 
-auto Board::play_move(unsigned int col, Turn turn) -> int {
+auto board::play_move(unsigned int col, turn turn) -> int {
     // row out of range 0 <= col <= 6
     if (col > 6) {
         return 1;
@@ -48,10 +49,10 @@ auto Board::play_move(unsigned int col, Turn turn) -> int {
 
     bitboard current_board;
     switch (turn) {
-        case Turn::red:
+        case turn::red:
             current_board = red_bitboard;
             break;
-        case Turn::yellow:
+        case turn::yellow:
             current_board = yellow_bitboard;
             break;
     }
@@ -66,10 +67,10 @@ auto Board::play_move(unsigned int col, Turn turn) -> int {
     current_board |= current_field;
 
     switch (turn) {
-        case Turn::red:
+        case turn::red:
             red_bitboard = current_board;
             break;
-        case Turn::yellow:
+        case turn::yellow:
             yellow_bitboard = current_board;
             break;
     }
@@ -77,13 +78,13 @@ auto Board::play_move(unsigned int col, Turn turn) -> int {
     return 0;
 }
 
-auto Board::check_win(Turn turn) -> bool {
+auto board::check_win(turn turn) -> bool {
     bitboard current_board;
     switch (turn) {
-        case Turn::red:
+        case turn::red:
             current_board = red_bitboard;
             break;
-        case Turn::yellow:
+        case turn::yellow:
             current_board = yellow_bitboard;
             break;
     }
@@ -139,7 +140,7 @@ auto Board::check_win(Turn turn) -> bool {
     return false;
 }
 
-void Board::show_board() const {
+void board::show_board() const {
     for (int row = 5; row >= 0; row--) {
         for (int col = 6; col >= 0; col--) {
             bitboard index = static_cast<uint64_t>(row) * 7 + col;
@@ -157,7 +158,7 @@ void Board::show_board() const {
     }
 }
 
-void Board::show_any_board(bitboard board) {
+void board::show_any_board(bitboard board) {
     for (int row = 5; row >= 0; row--) {
         for (int col = 6; col >= 0; col--) {
             bitboard index = static_cast<uint64_t>(row) * 7 + col;
@@ -171,4 +172,26 @@ void Board::show_any_board(bitboard board) {
         }
         std::cout << "\n";
     }
+}
+
+auto board::get_legal_moves(turn turn) -> legal_moves {
+    bitboard current_board;
+    switch (turn) {
+        case turn::red:
+            current_board = red_bitboard;
+            break;
+        case turn::yellow:
+            current_board = yellow_bitboard;
+            break;
+    }
+    std::array<int, 7> moves {};
+    int count = 0;
+    for (int i = 0; i < 7; i++) {
+        if ((current_board & column_masks[i]) == column_masks[i]) {
+            moves[count] = i;
+            count++;
+        }
+    }
+
+    return legal_moves {moves, count};
 }

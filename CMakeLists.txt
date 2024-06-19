@@ -19,7 +19,10 @@ include(cmake/variables.cmake)
 
 add_library(
     Connect4_lib OBJECT
-    source/lib.cpp
+    source/board.hpp
+    source/board.cpp
+    source/game.hpp
+    source/game.cpp
 )
 
 target_include_directories(
