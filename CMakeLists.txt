@@ -22,7 +22,6 @@ add_library(
     source/board.hpp
     source/board.cpp
     source/game.hpp
-    source/game.cpp
 )
 
 target_include_directories(
