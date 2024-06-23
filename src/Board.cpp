@@ -12,42 +12,6 @@
 #define RED "\033[38;5;196m"
 #define YELLOW "\033[38;5;226m"
 
-const std::array<Bitboard, 7> Board::column_masks = {
-    0b0000000000000000000000'1000000'1000000'1000000'1000000'1000000'1000000,
-    0b0000000000000000000000'0100000'0100000'0100000'0100000'0100000'0100000,
-    0b0000000000000000000000'0010000'0010000'0010000'0010000'0010000'0010000,
-    0b0000000000000000000000'0001000'0001000'0001000'0001000'0001000'0001000,
-    0b0000000000000000000000'0000100'0000100'0000100'0000100'0000100'0000100,
-    0b0000000000000000000000'0000010'0000010'0000010'0000010'0000010'0000010,
-    0b0000000000000000000000'0000001'0000001'0000001'0000001'0000001'0000001,
-};
-const std::array<Bitboard, 6> Board::row_masks = {
-    0b0000000000000000000000'0000000'0000000'0000000'0000000'0000000'1111111,
-    0b0000000000000000000000'0000000'0000000'0000000'0000000'1111111'0000000,
-    0b0000000000000000000000'0000000'0000000'0000000'1111111'0000000'0000000,
-    0b0000000000000000000000'0000000'0000000'1111111'0000000'0000000'0000000,
-    0b0000000000000000000000'0000000'1111111'0000000'0000000'0000000'0000000,
-    0b0000000000000000000000'1111111'0000000'0000000'0000000'0000000'0000000,
-};
-
-const std::array<Bitboard, 6> Board::diagonal_mask = {
-    0b0000000000000000000000'0000000'0000000'0000001'0000010'0000100'0001000,
-    0b0000000000000000000000'0000000'0000001'0000010'0000100'0001000'0010000,
-    0b0000000000000000000000'0000001'0000010'0000100'0001000'0010000'0100000,
-    0b0000000000000000000000'0000010'0000100'0001000'0010000'0100000'1000000,
-    0b0000000000000000000000'0000100'0001000'0010000'0100000'1000000'0000000,
-    0b0000000000000000000000'0001000'0010000'0100000'1000000'0000000'0000000,
-};
-
-const std::array<Bitboard, 6> Board::other_diagonal_mask = {
-    0b0000000000000000000000'0000000'0000000'1000000'0100000'0010000'0001000,
-    0b0000000000000000000000'0000000'1000000'0100000'0010000'0001000'0000100,
-    0b0000000000000000000000'1000000'0100000'0010000'0001000'0000100'0000010,
-    0b0000000000000001000000'0100000'0010000'0001000'0000100'0000010'0000001,
-    0b0000000100000000000000'0010000'0001000'0000100'0000010'0000001'0000000,
-    0b0000010000000000000000'0001000'0000100'0000010'0000001'0000000'0000000,
-};
-
 auto Board::play_move(unsigned int col, Turn turn) -> PlayMoveError {
     // row out of range 0 <= col <= 6
     if (col > 6) {
@@ -76,6 +40,46 @@ auto Board::play_move(unsigned int col, Turn turn) -> PlayMoveError {
     }
 
     current_board |= current_field;
+
+    switch (turn) {
+        case Turn::red:
+            red_bitboard = current_board;
+            break;
+        case Turn::yellow:
+            yellow_bitboard = current_board;
+            break;
+    }
+
+    return PlayMoveError::no_error;
+}
+
+auto Board::undo_move(unsigned int col, Turn turn) -> PlayMoveError {
+    // row out of range 0 <= col <= 6
+    if (col > 6) {
+        return PlayMoveError::column_out_of_range;
+    }
+
+    Bitboard current_board;
+    switch (turn) {
+        case Turn::red:
+            current_board = red_bitboard;
+            break;
+        case Turn::yellow:
+            current_board = yellow_bitboard;
+            break;
+    }
+    unsigned int current_row = 5;
+    Bitboard current_field = column_masks[col] & row_masks[current_row];
+    while ((current_field & (red_bitboard | yellow_bitboard)) == 0) {
+        current_row--;
+        current_field = column_masks[col] & row_masks[current_row];
+    }
+
+    if ((current_board & current_field) == 0) {
+        return PlayMoveError::column_invalid;
+    }
+
+    current_board ^= current_field;
 
     switch (turn) {
         case Turn::red:
@@ -198,7 +202,7 @@ auto Board::get_legal_moves(Turn turn) -> LegalMoves {
     std::array<int, 7> moves {};
     int count = 0;
     for (int i = 0; i < 7; i++) {
-        if ((current_board & column_masks[i]) == column_masks[i]) {
+        if ((current_board & column_masks[i]) != column_masks[i]) {
             moves[count] = i;
             count++;
         }

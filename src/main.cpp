@@ -7,6 +7,7 @@
 #include "Board.hpp"
 #include "Errors.hpp"
 #include "Game.hpp"
+#include "bot.hpp"
 
 auto random_turn() -> Turn {
     std::random_device rd;
@@ -17,10 +18,6 @@ auto random_turn() -> Turn {
 
     // Generate a random value and cast it to the enum type
     return static_cast<Turn>(dist(gen));
-}
-
-auto bot(Board board) -> int {
-    return 0;
 }
 
 auto human(Board board) -> int {

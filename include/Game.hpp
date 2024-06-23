@@ -10,5 +10,6 @@ class Game {
     enum Turn turn;
     class Board board;
 
-    auto play_move(unsigned int col) -> PlayMoveResult;
+    auto play_move(unsigned int col) -> PlayMoveError;
+    auto undo_move(unsigned int col) -> PlayMoveError;
 };
