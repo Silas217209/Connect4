@@ -3,6 +3,8 @@
 #include <array>
 #include <cstdint>
 
+#include "Errors.hpp"
+
 using Bitboard = uint64_t;
 
 enum Turn { yellow, red };
@@ -17,7 +19,7 @@ class Board {
     Bitboard yellow_bitboard = 0b0;
     Bitboard red_bitboard = 0b0;
 
-    auto play_move(unsigned int col, Turn turn) -> int;
+    auto play_move(unsigned int col, Turn turn) -> PlayMoveError;
     auto check_win(Turn turn) -> bool;
     void show_board() const;
     static void show_any_board(Bitboard board);

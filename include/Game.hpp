@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Board.hpp"
+#include "Errors.hpp"
 
 class Game {
   public:
@@ -9,5 +10,5 @@ class Game {
     enum Turn turn;
     class Board board;
 
-    auto play_move(unsigned int col) -> int;
+    auto play_move(unsigned int col) -> PlayMoveResult;
 };

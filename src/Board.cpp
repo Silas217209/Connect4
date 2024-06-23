@@ -5,6 +5,13 @@
 #include <array>
 #include <iostream>
 
+#include "Errors.hpp"
+
+// Define some ANSI escape codes for colors
+#define RESET "\033[0m"
+#define RED "\033[38;5;196m"
+#define YELLOW "\033[38;5;226m"
+
 const std::array<Bitboard, 7> Board::column_masks = {
     0b0000000000000000000000'1000000'1000000'1000000'1000000'1000000'1000000,
     0b0000000000000000000000'0100000'0100000'0100000'0100000'0100000'0100000,
@@ -41,10 +48,10 @@ const std::array<Bitboard, 6> Board::other_diagonal_mask = {
     0b0000010000000000000000'0001000'0000100'0000010'0000001'0000000'0000000,
 };
 
-auto Board::play_move(unsigned int col, Turn turn) -> int {
+auto Board::play_move(unsigned int col, Turn turn) -> PlayMoveError {
     // row out of range 0 <= col <= 6
     if (col > 6) {
-        return 1;
+        return PlayMoveError::column_out_of_range;
     }
 
     Bitboard current_board;
@@ -55,6 +62,10 @@ auto Board::play_move(unsigned int col, Turn turn) -> int {
         case Turn::yellow:
             current_board = yellow_bitboard;
             break;
+    }
+
+    if ((red_bitboard | yellow_bitboard) == column_masks[col]) {
+        return PlayMoveError::column_full;
     }
 
     unsigned int current_row = 0;
@@ -75,7 +86,7 @@ auto Board::play_move(unsigned int col, Turn turn) -> int {
             break;
     }
 
-    return 0;
+    return PlayMoveError::no_error;
 }
 
 auto Board::check_win(Turn turn) -> bool {
@@ -147,9 +158,9 @@ void Board::show_board() const {
             Bitboard field_mask = static_cast<uint64_t>(1) << index;
 
             if ((yellow_bitboard & field_mask) != 0) {
-                std::cout << "◯ ";
+                std::cout << YELLOW << "● " << RESET;
             } else if ((red_bitboard & field_mask) != 0) {
-                std::cout << "● ";
+                std::cout << RED << "● " << RESET;
             } else {
                 std::cout << ". ";
             }

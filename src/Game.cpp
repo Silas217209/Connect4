@@ -1,16 +1,21 @@
 #include "Game.hpp"
 
 #include "Board.hpp"
+#include "Errors.hpp"
 
 Turn turn;
 Board board;
 
 Game::Game(Turn turn, Board board) : turn(turn), board(board) {}
 
-auto Game::play_move(unsigned int col) -> int {
-    int result = board.play_move(col, turn);
-    if (result != 0) {
-        return 1;
+auto Game::play_move(unsigned int col) -> PlayMoveError {
+    PlayMoveError result = board.play_move(col, turn);
+    if (result == PlayMoveError::column_out_of_range) {
+        return PlayMoveError::column_full;
+    }
+
+    if (result == PlayMoveError::column_full) {
+        return PlayMoveError::column_full;
     }
 
     switch (turn) {
@@ -22,5 +27,5 @@ auto Game::play_move(unsigned int col) -> int {
             break;
     }
 
-    return 0;
+    return PlayMoveError::no_error;
 }
