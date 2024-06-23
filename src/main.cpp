@@ -23,13 +23,13 @@ auto random_turn() -> Turn {
 auto human(Board board) -> int {
     while (true) {
         std::string input;
-        std::cout << "Column: ";
+        std::cout << "Column (1-7): ";
         std::cin >> input;
         std::cout << "\n";
 
         try {
             int result = std::stoi(input);
-            return result;
+            return result - 1;
         } catch (std::exception) {
             std::cout << "Invalid Input\n";
         }
@@ -68,6 +68,7 @@ auto main() -> int {
                 }
                 if (game.board.check_win(Turn::yellow)) {
                     std::cout << "Human won!\n";
+                    game.board.show_board();
                     return 0;
                 }
                 break;
@@ -81,6 +82,7 @@ auto main() -> int {
                 }
                 if (game.board.check_win(Turn::red)) {
                     std::cout << "Bot defeated Humanity!\n";
+                    game.board.show_board();
                     return 0;
                 }
                 break;

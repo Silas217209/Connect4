@@ -11,6 +11,7 @@
 #define RESET "\033[0m"
 #define RED "\033[38;5;196m"
 #define YELLOW "\033[38;5;226m"
+#define ANNOTATION "\033[38;5;023m"
 
 auto Board::play_move(unsigned int col, Turn turn) -> PlayMoveError {
     // row out of range 0 <= col <= 6
@@ -28,7 +29,8 @@ auto Board::play_move(unsigned int col, Turn turn) -> PlayMoveError {
             break;
     }
 
-    if ((red_bitboard | yellow_bitboard) == column_masks[col]) {
+    if (((red_bitboard | yellow_bitboard) & column_masks[col])
+        == column_masks[col]) {
         return PlayMoveError::column_full;
     }
 
@@ -156,6 +158,10 @@ auto Board::check_win(Turn turn) -> bool {
 }
 
 void Board::show_board() const {
+    for (int i = 0; i < 7; i++) {
+        std::cout << ANNOTATION << i + 1 << " " << RESET;
+    }
+    std::cout << "\n";
     for (int row = 5; row >= 0; row--) {
         for (int col = 6; col >= 0; col--) {
             Bitboard index = static_cast<uint64_t>(row) * 7 + col;
@@ -202,10 +208,13 @@ auto Board::get_legal_moves(Turn turn) -> LegalMoves {
     std::array<int, 7> moves {};
     int count = 0;
     for (int i = 0; i < 7; i++) {
-        if ((current_board & column_masks[i]) != column_masks[i]) {
-            moves[count] = i;
-            count++;
+        // full
+        if (((red_bitboard | yellow_bitboard) & column_masks[i])
+            == column_masks[i]) {
+            continue;
         }
+        moves[count] = i;
+        count++;
     }
 
     return LegalMoves {moves, count};
