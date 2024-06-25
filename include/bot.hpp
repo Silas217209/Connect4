@@ -3,6 +3,7 @@
 #include "Board.hpp"
 
 auto bot(Board board) -> int;
+auto bot2(Board board) -> int;
 
 auto evaluate_board(Bitboard bitboard) -> int;
 
