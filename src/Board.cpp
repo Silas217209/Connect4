@@ -71,9 +71,9 @@ auto Board::undo_move(unsigned int col, Turn turn) -> PlayMoveError {
             current_board = yellow_bitboard;
             break;
     }
-    unsigned int current_row = 5;
+    int current_row = 5;
     Bitboard current_field = column_masks[col] & row_masks[current_row];
-    while ((current_field & (red_bitboard | yellow_bitboard)) == 0) {
+    while ((current_field & (red_bitboard | yellow_bitboard)) == 0 && current_row > 0) {
         current_row--;
         current_field = column_masks[col] & row_masks[current_row];
     }

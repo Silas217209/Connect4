@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "Board.hpp"
+#include "Errors.hpp"
 #include "Game.hpp"
 
 auto longestStreakOfOnes(uint64_t num) -> int {
@@ -29,7 +30,7 @@ auto longestStreakOfOnes(uint64_t num) -> int {
     return maxStreak;
 };
 
-auto evaluate_board(Bitboard bitboard, Bitboard opposing_bitboard) -> int {
+auto evaluate_board(Bitboard bitboard) -> int {
     int score = 0;
     int exponent = 3;
 
@@ -65,10 +66,8 @@ auto evaluate_board(Bitboard bitboard, Bitboard opposing_bitboard) -> int {
 }
 
 auto evaluate(Game game) -> int {
-    int red_score =
-        evaluate_board(game.board.red_bitboard, game.board.yellow_bitboard);
-    int yellow_score =
-        evaluate_board(game.board.yellow_bitboard, game.board.red_bitboard);
+    int red_score = evaluate_board(game.board.red_bitboard);
+    int yellow_score = evaluate_board(game.board.yellow_bitboard);
 
     if (game.board.check_win(Turn::red)) {
         red_score = 10000;
@@ -96,7 +95,7 @@ auto alpha_beta(Game game, int alpha, int beta, int depth) -> int {
 
         if (score >= beta)
             return score;  // fail-soft beta-cutoff
-        if (score >= bestscore) {
+        if (score > bestscore) {
             bestscore = score;
             if (score > alpha)
                 alpha = score;
@@ -105,7 +104,6 @@ auto alpha_beta(Game game, int alpha, int beta, int depth) -> int {
     return bestscore;
 }
 
-// implement iterative deepening
 auto bot(Board board) -> int {
     Game game(Turn::red, board);
     LegalMoves moves = game.board.get_legal_moves(Turn::red);
@@ -115,8 +113,10 @@ auto bot(Board board) -> int {
     for (int i = 0; i < moves.count; i++) {
         int move = moves.legal_moves[i];
         game.play_move(move);
-        int score = alpha_beta(game, INT_MIN, INT_MAX, 5);
+        int score = alpha_beta(game, INT_MIN, INT_MAX, 10);
         game.undo_move(move);
+
+        std::cout << "Move: " << move + 1 << ", Score: " << score << "\n";
 
         if (score > best_score) {
             best_move = move;

@@ -31,11 +31,6 @@ auto Game::play_move(unsigned int col) -> PlayMoveError {
 }
 
 auto Game::undo_move(unsigned int col) -> PlayMoveError {
-    PlayMoveError result = board.undo_move(col, turn);
-    if (result == PlayMoveError::column_out_of_range) {
-        return PlayMoveError::column_out_of_range;
-    }
-
     switch (turn) {
         case yellow:
             turn = Turn::red;
@@ -43,6 +38,11 @@ auto Game::undo_move(unsigned int col) -> PlayMoveError {
         case red:
             turn = Turn::yellow;
             break;
+    }
+
+    PlayMoveError result = board.undo_move(col, turn);
+    if (result == PlayMoveError::column_out_of_range) {
+        return PlayMoveError::column_out_of_range;
     }
 
     return PlayMoveError::no_error;
