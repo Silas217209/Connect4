@@ -45,3 +45,7 @@ _deps
 CMakeUserPresets.json
 build
 .cache
+
+.idea
+
+cmake-build-debug

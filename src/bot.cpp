@@ -3,107 +3,62 @@
 #include <immintrin.h>
 
 #include <climits>
+#include <cmath>
+#include <cstdint>
 #include <iostream>
 
 #include "Board.hpp"
 #include "Game.hpp"
 
+auto longestStreakOfOnes(uint64_t num) -> int {
+    int maxStreak = 0;
+    int currentStreak = 0;
+
+    while (num != 0) {
+        if (num & 1) {
+            currentStreak++;
+            if (currentStreak > maxStreak) {
+                maxStreak = currentStreak;
+            }
+        } else {
+            currentStreak = 0;
+        }
+        num >>= 1;  // Shift the bits to the right
+    }
+
+    return maxStreak;
+};
+
 auto evaluate_board(Bitboard bitboard, Bitboard opposing_bitboard) -> int {
-    const int value_2 = 3;
-    const int value_3 = 50;
-    const int value_4 = 0;
-
     int score = 0;
-    // vertical
-    for (auto col : Board::column_masks) {
-        Bitboard extracted_col = _pext_u64(bitboard, col);
-        Bitboard extracted_col_opp = _pext_u64(opposing_bitboard, col);
+    int exponent = 3;
 
-        Bitboard comp4 = 0b1111;
-        Bitboard comp3 = 0b111;
-        Bitboard comp2 = 0b11;
+    for (auto col_mask : Board::column_masks) {
+        uint64_t extracted_col = _pext_u64(bitboard, col_mask);
+        int streak = longestStreakOfOnes(extracted_col);
 
-        for (int i = 0; i < 4; i++) {
-            if ((extracted_col_opp & comp4) != 0) {
-                continue;
-            }
-            if (extracted_col == comp3) {
-                score += value_3;
-            } else if (extracted_col == comp2) {
-                score += value_2;
-            }
-            comp4 <<= 1;
-            comp3 <<= 1;
-            comp2 <<= 1;
-        }
+        score += pow(streak, exponent);
     }
 
-    // horizontal
-    for (auto col : Board::row_masks) {
-        Bitboard extracted_col = _pext_u64(bitboard, col);
-        Bitboard extracted_col_opp = _pext_u64(opposing_bitboard, col);
-        Bitboard comp4 = 0b1111;
-        Bitboard comp3 = 0b111;
-        Bitboard comp2 = 0b11;
+    for (auto row_mask : Board::row_masks) {
+        uint64_t extracted_row = _pext_u64(bitboard, row_mask);
+        int streak = longestStreakOfOnes(extracted_row);
 
-        for (int i = 0; i < 5; i++) {
-            if ((extracted_col_opp & comp4) != 0) {
-                continue;
-            }
-            if (extracted_col == comp3) {
-                score += value_3;
-            } else if (extracted_col == comp2) {
-                score += value_2;
-            }
-            comp4 <<= 1;
-            comp3 <<= 1;
-            comp2 <<= 1;
-        }
-    }
-    // diagonal 1
-    for (auto col : Board::diagonal_mask) {
-        Bitboard extracted_col = _pext_u64(bitboard, col);
-        Bitboard extracted_col_opp = _pext_u64(opposing_bitboard, col);
-        Bitboard comp4 = 0b1111;
-        Bitboard comp3 = 0b111;
-        Bitboard comp2 = 0b11;
-
-        for (int i = 0; i < 4; i++) {
-            if ((extracted_col_opp & comp4) != 0) {
-                continue;
-            }
-
-            if (extracted_col == comp3) {
-                score += value_3;
-            } else if (extracted_col == comp2) {
-                score += value_2;
-            }
-            comp4 <<= 1;
-            comp3 <<= 1;
-            comp2 <<= 1;
-        }
+        score += pow(streak, exponent);
     }
 
-    // diagonal 2
-    for (auto col : Board::other_diagonal_mask) {
-        Bitboard extracted_col = _pext_u64(bitboard, col);
-        Bitboard extracted_col_opp = _pext_u64(bitboard, col);
-        Bitboard comp4 = 0b1111;
-        Bitboard comp3 = 0b111;
-        Bitboard comp2 = 0b11;
+    for (auto diag_mask : Board::diagonal_mask) {
+        uint64_t extracted_diag = _pext_u64(bitboard, diag_mask);
+        int streak = longestStreakOfOnes(extracted_diag);
 
-        for (int i = 0; i < 4; i++) {
-            if ((extracted_col_opp & comp4) != 0) {
-                continue;
-            }
-            if (extracted_col == comp3) {
-                score += value_3;
-            } else if (extracted_col == comp2) {
-                score += value_2;
-            }
-            comp3 <<= 1;
-            comp2 <<= 1;
-        }
+        score += pow(streak, exponent);
+    }
+
+    for (auto anti_diag_mask : Board::other_diagonal_mask) {
+        uint64_t extracted_anti_diag = _pext_u64(bitboard, anti_diag_mask);
+        int streak = longestStreakOfOnes(extracted_anti_diag);
+
+        score += pow(streak, exponent);
     }
 
     return score;
@@ -114,19 +69,15 @@ auto evaluate(Game game) -> int {
         evaluate_board(game.board.red_bitboard, game.board.yellow_bitboard);
     int yellow_score =
         evaluate_board(game.board.yellow_bitboard, game.board.red_bitboard);
-    /*
+
     if (game.board.check_win(Turn::red)) {
         red_score = 10000;
     }
     if (game.board.check_win(Turn::yellow)) {
         yellow_score = 10000;
-    }*/
-    switch (game.turn) {
-        case yellow:
-            return yellow_score - red_score;
-        case red:
-            return red_score - yellow_score;
     }
+
+    return red_score - yellow_score;
 }
 
 auto alpha_beta(Game game, int alpha, int beta, int depth) -> int {
@@ -154,27 +105,27 @@ auto alpha_beta(Game game, int alpha, int beta, int depth) -> int {
     return bestscore;
 }
 
+// implement iterative deepening
 auto bot(Board board) -> int {
     Game game(Turn::red, board);
     LegalMoves moves = game.board.get_legal_moves(Turn::red);
 
     int best_move = -1;
     int best_score = INT_MIN;
-
     for (int i = 0; i < moves.count; i++) {
         int move = moves.legal_moves[i];
         game.play_move(move);
-        int score = alpha_beta(game, INT_MIN, INT_MAX, 12);
+        int score = alpha_beta(game, INT_MIN, INT_MAX, 5);
         game.undo_move(move);
-
-        std::cout << "Move: " << move << "\t" << "Score: " << score << "\n";
 
         if (score > best_score) {
             best_move = move;
             best_score = score;
         }
     }
-    std::cout << best_move << "\n";
+
+    std::cout << "Best Move: " << best_move + 1
+              << ", Best Score: " << best_score << "\n";
 
     return best_move;
 }

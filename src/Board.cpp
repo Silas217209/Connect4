@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "Errors.hpp"
+#include "bot.hpp"
 
 // Define some ANSI escape codes for colors
 #define RESET "\033[0m"
@@ -109,51 +110,43 @@ auto Board::check_win(Turn turn) -> bool {
     // vertical
     for (auto col : column_masks) {
         Bitboard extracted_col = _pext_u64(current_board, col);
-        Bitboard vert_comp = 0b1111;
-        for (int i = 0; i < 3; i++) {
-            if (extracted_col == vert_comp) {
-                return true;
-            }
-            vert_comp <<= 1;
+        int streak = longestStreakOfOnes(extracted_col);
+
+        if (streak >= 4) {
+            return true;
         }
     }
 
     // horizontal
     for (auto row : row_masks) {
         Bitboard extracted_row = _pext_u64(current_board, row);
-        Bitboard horizontal_comp = 0b1111;
+        int streak = longestStreakOfOnes(extracted_row);
 
-        for (int i = 0; i < 4; i++) {
-            if (extracted_row == horizontal_comp) {
-                return true;
-            }
-
-            horizontal_comp <<= 1;
+        if (streak >= 4) {
+            return true;
         }
     }
 
     // diagonal bottom left to top right
     for (auto diag : diagonal_mask) {
         Bitboard extracted_diag = _pext_u64(current_board, diag);
-        Bitboard diag_comp = 0b1111;
-        for (int i = 0; i < 2; i++) {
-            if (extracted_diag == diag_comp) {
-                return true;
-            }
-            diag_comp <<= 1;
+        int streak = longestStreakOfOnes(extracted_diag);
+
+        if (streak >= 4) {
+            return true;
         }
     }
+
     // diagonal bottom left to top right
     for (auto diag : other_diagonal_mask) {
         Bitboard extracted_diag = _pext_u64(current_board, diag);
-        Bitboard diag_comp = 0b1111;
-        for (int i = 0; i < 2; i++) {
-            if (extracted_diag == diag_comp) {
-                return true;
-            }
-            diag_comp <<= 1;
+        int streak = longestStreakOfOnes(extracted_diag);
+
+        if (streak >= 4) {
+            return true;
         }
     }
+
     return false;
 }
 
