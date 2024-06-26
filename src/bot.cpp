@@ -2,6 +2,7 @@
 
 #include <immintrin.h>
 
+#include <array>
 #include <climits>
 #include <cmath>
 #include <cstdint>
@@ -87,15 +88,10 @@ auto evaluate(Game game) -> int {
     if (game.board.check_win(Turn::red)) {
         return 10000;
     } else if (game.board.check_win(Turn::yellow)) {
-        return 10000;
+        return -10000;
     }
 
-    switch (game.turn) {
-        case Turn::red:
-            return red_score - yellow_score;
-        case Turn::yellow:
-            return yellow_score - red_score;
-    }
+    return red_score - yellow_score;
 }
 
 auto alpha_beta(Game game, int alpha, int beta, int depth) -> int {
