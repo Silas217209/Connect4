@@ -105,6 +105,13 @@ auto alpha_beta(Game game, int alpha, int beta, int depth) -> int {
     for (int i = 0; i < moves.count; i++) {
         int move = moves.legal_moves[i];
         game.play_move(move);
+        // if other wins, avoid this move
+        if (game.board.check_win(
+                game.turn == Turn::yellow ? Turn::red : Turn::yellow
+            )) {
+            game.undo_move(move);
+            return -10000;
+        }
         int score = -alpha_beta(game, -beta, -alpha, depth - 1);
         game.undo_move(move);
 
@@ -116,6 +123,7 @@ auto alpha_beta(Game game, int alpha, int beta, int depth) -> int {
                 alpha = score;
         }
     }
+
     return bestscore;
 }
 
