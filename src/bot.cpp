@@ -3,6 +3,7 @@
 #include <immintrin.h>
 
 #include <array>
+#include <bit>
 #include <climits>
 #include <cmath>
 #include <cstdint>
@@ -46,44 +47,110 @@ auto streak_eval(int streak) -> int {
     return -5;
 }
 
-auto evaluate_board(Bitboard bitboard) -> int {
+/*
+ * stolen from https://github.com/stratzilla/connect-four/tree/master
++-----------------+-----------------+------------+----------+
+| Friendly Pieces | Opposing Pieces | Empty Spot | Score    |
++-----------------+-----------------+------------+----------+
+| 4               | 0               | 0          | +500,001 |
+| 3               | 0               | 1          | +5,000   |
+| 2               | 0               | 2          | +500     |
+| 0               | 2               | 2          | -501     |
+| 0               | 3               | 1          | -5,001   |
+| 0               | 4               | 0          | -500,000 |
++-----------------+-----------------+------------+----------+
+*/
+
+auto eval_scoreset(int my, int opp, int empty) -> int {
+    if (my == 4 && opp == 0 && empty == 0) {
+        return 500001;
+    }
+    if (my == 3 && opp == 0 && empty == 1) {
+        return 5000;
+    }
+    if (my == 2 && opp == 0 && empty == 2) {
+        return 500;
+    }
+    if (my == 0 && opp == 2 && empty == 2) {
+        return -501;
+    }
+    if (my == 0 && opp == 3 && empty == 1) {
+        return -5001;
+    }
+
+    return 0;
+}
+
+auto evaluate_board(Bitboard my_bitboard, Bitboard opp_bitboard) -> int {
     int score = 0;
     int exponent = 5;
 
     for (auto col_mask : Board::column_masks) {
-        uint64_t extracted_col = _pext_u64(bitboard, col_mask);
-        int streak = longestStreakOfOnes(extracted_col);
+        uint64_t extracted_col = _pext_u64(my_bitboard, col_mask);
 
-        score += streak_eval(streak);
+        // loop over extracted column in 4 bit windows
+        uint64_t mask = 0b1111;
+        for (int i = 0; i < 4; i++) {
+            uint64_t window = extracted_col & mask;
+            int my = std::popcount(window & my_bitboard);
+            int opp = std::popcount(window & opp_bitboard);
+            int empty = 4 - my - opp;
+            score += eval_scoreset(my, opp, empty);
+            mask <<= 1;
+        }
     }
 
     for (auto row_mask : Board::row_masks) {
-        uint64_t extracted_row = _pext_u64(bitboard, row_mask);
-        int streak = longestStreakOfOnes(extracted_row);
+        uint64_t extracted_row = _pext_u64(my_bitboard, row_mask);
 
-        score += streak_eval(streak);
+        // loop over extracted row in 4 bit windows
+        uint64_t mask = 0b1111;
+        for (int i = 0; i < 4; i++) {
+            uint64_t window = extracted_row & mask;
+            int my = std::popcount(window & my_bitboard);
+            int opp = std::popcount(window & opp_bitboard);
+            int empty = 4 - my - opp;
+            score += eval_scoreset(my, opp, empty);
+            mask <<= 1;
+        }
     }
 
     for (auto diag_mask : Board::diagonal_mask) {
-        uint64_t extracted_diag = _pext_u64(bitboard, diag_mask);
-        int streak = longestStreakOfOnes(extracted_diag);
+        uint64_t extracted_diag = _pext_u64(my_bitboard, diag_mask);
 
-        score += streak_eval(streak);
+        // loop over extracted diagonal in 4 bit windows
+        uint64_t mask = 0b1111;
+        for (int i = 0; i < 4; i++) {
+            uint64_t window = extracted_diag & mask;
+            int my = std::popcount(window & my_bitboard);
+            int opp = std::popcount(window & opp_bitboard);
+            int empty = 4 - my - opp;
+            score += eval_scoreset(my, opp, empty);
+            mask <<= 1;
+        }
     }
 
     for (auto anti_diag_mask : Board::other_diagonal_mask) {
-        uint64_t extracted_anti_diag = _pext_u64(bitboard, anti_diag_mask);
-        int streak = longestStreakOfOnes(extracted_anti_diag);
+        uint64_t extracted_anti_diag = _pext_u64(my_bitboard, anti_diag_mask);
 
-        score += streak_eval(streak);
+        // loop over extracted anti-diagonal in 4 bit windows
+        uint64_t mask = 0b1111;
+        for (int i = 0; i < 4; i++) {
+            uint64_t window = extracted_anti_diag & mask;
+            int my = std::popcount(window & my_bitboard);
+            int opp = std::popcount(window & opp_bitboard);
+            int empty = 4 - my - opp;
+            score += eval_scoreset(my, opp, empty);
+            mask <<= 1;
+        }
     }
 
     return score;
 }
 
 auto evaluate(Game game) -> int {
-    int red_score = evaluate_board(game.board.red_bitboard);
-    int yellow_score = evaluate_board(game.board.yellow_bitboard);
+    int red_score = evaluate_board(game.board.red_bitboard, game.board.yellow_bitboard);
+    int yellow_score = evaluate_board(game.board.yellow_bitboard, game.board.red_bitboard);
 
     if (game.board.check_win(Turn::red)) {
         return 10000;
